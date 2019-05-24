@@ -30,7 +30,7 @@ func regSplitEnv(envVar string) []*string {
 
 func main() {
 	hooks := githubHookCIDRs()
-	sgsToCheck := regSplitEnv(os.Getenv("SG_IDS"))
+	sgsToCheck := regSplitEnv(os.Getenv("SECURITY_GROUP_IDS"))
 	for _, sg := range getSecurityGroups(sgsToCheck) {
 		currentRules := sg.IpPermissions
 
