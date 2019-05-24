@@ -10,10 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
+var svc = ec2.New(session.New(&aws.Config{
+	Region: aws.String("us-east-1")},
+))
+
 func getSecurityGroups(sgIds []*string) []*ec2.SecurityGroup {
-	svc := ec2.New(session.New(&aws.Config{
-		Region: aws.String("us-east-1")},
-	))
 	_, err := svc.Config.Credentials.Get()
 	if err != nil {
 		log.Fatalln(err)
@@ -39,9 +40,6 @@ func getSecurityGroups(sgIds []*string) []*ec2.SecurityGroup {
 }
 
 func dropRuleFromSg(ipsToDrop []string, groupID string) {
-	svc := ec2.New(session.New(&aws.Config{
-		Region: aws.String("us-east-1")},
-	))
 	for _, cidr := range ipsToDrop {
 		_, err := svc.RevokeSecurityGroupIngress(&ec2.RevokeSecurityGroupIngressInput{
 			GroupId: aws.String(groupID),
@@ -66,9 +64,6 @@ func dropRuleFromSg(ipsToDrop []string, groupID string) {
 }
 
 func addRuleToSg(ipRangesToAdd []string, groupID string) {
-	svc := ec2.New(session.New(&aws.Config{
-		Region: aws.String("us-east-1")},
-	))
 	for _, cidr := range ipRangesToAdd {
 		fmt.Printf("Attempting to add the following CIDR to '%s': %s\n", groupID, cidr)
 		_, err := svc.AuthorizeSecurityGroupIngress(&ec2.AuthorizeSecurityGroupIngressInput{
