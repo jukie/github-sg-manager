@@ -8,7 +8,9 @@ I use this function to allow inbound Github webhooks to my ci/cd environments
 ## Environment variables
 
 * `SECURITY_GROUP_IDS` - Comma separated list of Security Groups to make changes to 
-  *  Valid values: `sg-example0123456789, sg-example1234567890` or `sg-example0123456789,sg-example1234567890`
+  *  Valid values: 
+     * `sg-example0123456789, sg-example1234567890`
+     * `sg-example0123456789,sg-example1234567890`
 
 
 ## To do list:
