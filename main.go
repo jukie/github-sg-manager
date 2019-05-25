@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"regexp"
+
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
 // Checks if the provided string "item" exists in a provided "slice"
@@ -29,8 +32,17 @@ func regSplitEnv(envVar string) []*string {
 }
 
 func main() {
+	lambda.Start(sgUpdater)
+}
+
+func sgUpdater() {
 	hooks := githubHookCIDRs()
-	sgsToCheck := regSplitEnv(os.Getenv("SECURITY_GROUP_IDS"))
+	if os.Getenv("SECURITY_GROUP_IDS") != nil {
+		sgsToCheck := regSplitEnv(os.Getenv("SECURITY_GROUP_IDS"))
+	} else {
+		log.Fatalln("No security group ids provided, exiting")
+	}
+
 	for _, sg := range getSecurityGroups(sgsToCheck) {
 		currentRules := sg.IpPermissions
 
