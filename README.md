@@ -17,4 +17,5 @@ I use this function to allow inbound Github webhooks to my ci/cd environments
 * More docs
 * Add Terraform examples for initial deployment
 * Add support for any port (currently defaults 443)
+* Integration tests
 * Code review? Tell me what sucks
