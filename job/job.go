@@ -72,7 +72,7 @@ func Execute() {
 		} else {
 			fmt.Println("No extra CIDRs to add, all good ༼つ▀̿_▀̿ ༽つ")
 		}
-
+		fmt.Println("Checking for invalid Security Group CIDRs...\n")
 		if len(invalidSgCIDRs) > 0 {
 			fmt.Printf("Currently Active Security Group CIDRS: %s\n", activeSgCIDRs)
 			fmt.Printf("Valid Github 'Hooks' CIDRs:            %s\n", hooks)

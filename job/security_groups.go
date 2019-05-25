@@ -60,7 +60,7 @@ func dropRuleFromSg(ipsToDrop []string, groupID string) {
 			log.Fatalln(err)
 		}
 	}
-	fmt.Printf("Successfully removed invalid CIDRs: %s", ipsToDrop)
+	fmt.Printf("Successfully removed invalid CIDRs: %s\n", ipsToDrop)
 }
 
 func addRuleToSg(ipRangesToAdd []string, groupID string) {
