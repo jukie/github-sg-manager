@@ -2,7 +2,6 @@ package job
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -14,10 +13,11 @@ var svc = ec2.New(session.New(&aws.Config{
 	Region: aws.String("us-east-1")},
 ))
 
-func getSecurityGroups(sgIds []*string) []*ec2.SecurityGroup {
+func getSecurityGroups(sgIds []*string) ([]*ec2.SecurityGroup, error) {
 	_, err := svc.Config.Credentials.Get()
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Println("Encountered error while checking for aws credentials")
+		return nil, err
 	}
 	input := &ec2.DescribeSecurityGroupsInput{
 		GroupIds: sgIds,
@@ -27,19 +27,18 @@ func getSecurityGroups(sgIds []*string) []*ec2.SecurityGroup {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			default:
-				panic(err.Error())
+				return nil, aerr
 			}
 		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			panic("Error getting Security Group with the provided Id.")
+			fmt.Println("Error getting Security Group(s) with the provided input.")
+			return nil, err
 		}
 	} else {
-		return result.SecurityGroups
+		return result.SecurityGroups, nil
 	}
 }
 
-func dropRuleFromSg(ipsToDrop []string, groupID string) {
+func dropRuleFromSg(ipsToDrop []string, groupID string) error {
 	for _, cidr := range ipsToDrop {
 		_, err := svc.RevokeSecurityGroupIngress(&ec2.RevokeSecurityGroupIngressInput{
 			GroupId: aws.String(groupID),
@@ -57,13 +56,14 @@ func dropRuleFromSg(ipsToDrop []string, groupID string) {
 			},
 		})
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 	}
 	fmt.Printf("Successfully removed invalid CIDRs: %s\n", ipsToDrop)
+	return nil
 }
 
-func addRuleToSg(ipRangesToAdd []string, groupID string) {
+func addRuleToSg(ipRangesToAdd []string, groupID string) error {
 	for _, cidr := range ipRangesToAdd {
 		fmt.Printf("Attempting to add the following CIDR to '%s': %s\n", groupID, cidr)
 		_, err := svc.AuthorizeSecurityGroupIngress(&ec2.AuthorizeSecurityGroupIngressInput{
@@ -82,8 +82,9 @@ func addRuleToSg(ipRangesToAdd []string, groupID string) {
 			},
 		})
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 	}
 	fmt.Printf("Successfully updated Security Group with additional CIDRs:      %s\n\n", ipRangesToAdd)
+	return nil
 }

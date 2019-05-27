@@ -7,7 +7,7 @@ import (
 	"regexp"
 )
 
-// Checks if the provided string "item" exists in a provided "slice"
+// Checks if the provided string "item" exists in the provided "slice"
 func contains(slice []string, item string) bool {
 	for _, a := range slice {
 		if a == item {
@@ -28,18 +28,24 @@ func regSplitEnv(envVar string) []*string {
 	}
 	return set
 }
+func Execute() error {
+	hooks, err := githubHookCIDRs()
+	if err != nil {
+		log.Println("Encounted error while making request for Github 'Hooks' CIDRs")
+		return err
+	}
 
-func Execute() {
-	hooks := githubHookCIDRs()
 	if len(os.Getenv("SECURITY_GROUP_IDS")) == 0 {
-		log.Fatalln("No security group ids provided, exiting")
+		log.Println("No security group ids provided, exiting")
 	}
 	sgsToCheck := regSplitEnv(os.Getenv("SECURITY_GROUP_IDS"))
-
-	for _, sg := range getSecurityGroups(sgsToCheck) {
+	sgResults, err := getSecurityGroups(sgsToCheck)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	for _, sg := range sgResults {
 		currentRules := sg.IpPermissions
-
-		//currentRules := getSecurityGroups().IpPermissions
 		var activeSgCIDRs []string
 		var invalidSgCIDRs []string
 		for _, rule := range currentRules {
@@ -65,7 +71,11 @@ func Execute() {
 			fmt.Printf("Currently Active Security Group CIDRS: %s\n", activeSgCIDRs)
 			fmt.Printf("Valid Github CIDRs:                    %s\n", hooks)
 			fmt.Printf("Missing Github 'Hooks' CIDRs:          %s\n\n", cidrsToAdd)
-			addRuleToSg(cidrsToAdd, *sg.GroupId)
+			err = addRuleToSg(cidrsToAdd, *sg.GroupId)
+			if err != nil {
+				fmt.Println("Error adding rules to Security Group")
+				return err
+			}
 			for _, v := range cidrsToAdd {
 				activeSgCIDRs = append(activeSgCIDRs, v)
 			}
@@ -77,9 +87,14 @@ func Execute() {
 			fmt.Printf("Currently Active Security Group CIDRS: %s\n", activeSgCIDRs)
 			fmt.Printf("Valid Github 'Hooks' CIDRs:            %s\n", hooks)
 			fmt.Printf("Invalid CIDRs on Security Group %s:\n  %s\n", *sg.GroupId, invalidSgCIDRs)
-			dropRuleFromSg(invalidSgCIDRs, *sg.GroupId)
+			err = dropRuleFromSg(invalidSgCIDRs, *sg.GroupId)
+			if err != nil {
+				fmt.Println("Error adding rules to Security Group")
+				return err
+			}
 		} else {
 			fmt.Println("No invalid CIDRs to drop, all good ༼つ▀̿_▀̿ ༽つ")
 		}
 	}
+	return nil
 }

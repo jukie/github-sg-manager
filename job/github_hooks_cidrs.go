@@ -4,22 +4,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
-func githubHookCIDRs() []string {
+func githubHookCIDRs() ([]string, error) {
 	resp, err := http.Get("https://api.github.com/meta")
 	if err != nil {
-		log.Fatalln("Error loading Github CIDRs")
+		fmt.Println(err)
+		return nil, err
 	}
 	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
-
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
 	var data struct {
 		Hooks []string //we only really care about the Hooks
 	}
 	json.Unmarshal(body, &data)
 	fmt.Printf("Valid 'Hooks' CIDRs response from https://api.github.com/meta:\n	%s\n\n\n", data.Hooks)
-	return data.Hooks
+	return data.Hooks, nil
 }
